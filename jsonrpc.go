@@ -2,6 +2,8 @@ package jsonrpc
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"net/http"
 )
 
 const (
@@ -74,5 +76,37 @@ func HandleRequest(request *Request) (*SuccessResponse, *ErrorResponse) {
 		Result:  result,
 		Id:      request.Id,
 	}, nil
+}
+
+func HandleRPCRequest(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		renderResponse(NewError(err, InvalidRequestErrorCode), w)
+		return
+	}
+	var req Request
+	err = json.Unmarshal(body, &req)
+	if err != nil {
+		renderResponse(NewError(err, ParseErrorCode), w)
+		return
+	}
+
+	response, errorResponse := HandleRequest(&req)
+	if errorResponse != nil {
+		renderResponse(NewError(err, InternalErrorCode), w)
+		return
+	}
+	renderResponse(response, w)
+	return
+}
+
+func renderResponse(res interface{}, w http.ResponseWriter) {
+	response, err := json.Marshal(res)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
 }
 
