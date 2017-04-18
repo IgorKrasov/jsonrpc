@@ -1,10 +1,7 @@
 package main
 
 import (
-	"log"
 	"net/http"
-	"github.com/IgorKrasov/jsonrpc"
-	"io/ioutil"
 	"encoding/json"
 )
 
