@@ -93,7 +93,7 @@ func HandleRPCRequest(w http.ResponseWriter, r *http.Request) {
 
 	response, errorResponse := HandleRequest(&req)
 	if errorResponse != nil {
-		renderResponse(NewError(err, InternalErrorCode), w)
+		renderResponse(errorResponse, w)
 		return
 	}
 	renderResponse(response, w)

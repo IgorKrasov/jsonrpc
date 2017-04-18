@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"encoding/json"
+	"github.com/IgorKrasov/jsonrpc"
 )
 
 type testParams struct {
