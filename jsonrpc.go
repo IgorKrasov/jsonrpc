@@ -31,10 +31,8 @@ type Services map[string]Procedure
 
 var services Services
 
-func New() *Request {
+func New() {
 	services = Services{}
-
-	return &Request{}
 }
 
 func RegisterProcedure(title string, procedure Procedure) {
