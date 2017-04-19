@@ -23,9 +23,9 @@ func testProcedure(p json.RawMessage) (interface{}, error) {
 }
 
 func main() {
-	jsonrpc.New()
-	jsonrpc.RegisterProcedure("test.test", testProcedure)
-	http.HandleFunc("/rpc", jsonrpc.HandleRPCRequest)
+	e := jsonrpc.New()
+	e.RegisterProcedure("test.test", testProcedure)
+	http.HandleFunc("/rpc", e.HandleRPCRequest)
 
 	http.ListenAndServe(":1323", nil)
 }

@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 )
 
+var rpc *jsonrpc.Endpoint
+
 type testParams struct {
 	Hello string `json:"hello"`
 }
@@ -14,10 +16,10 @@ type testParams struct {
 func HandleRPCRequest(c echo.Context) error {
 	request := new(jsonrpc.Request)
 	if err := c.Bind(request); err != nil {
-		return c.JSON(http.StatusInternalServerError, jsonrpc.NewError(err, jsonrpc.InvalidRequestErrorCode))
+		return c.JSON(http.StatusInternalServerError, rpc.NewError(err, jsonrpc.InvalidRequestErrorCode))
 	}
 
-	result, errorResponse := jsonrpc.HandleRequest(request)
+	result, errorResponse := rpc.HandleRequest(request)
 	if errorResponse != nil {
 		return c.JSON(http.StatusInternalServerError, errorResponse)
 	}
@@ -36,8 +38,8 @@ func testProcedure(p json.RawMessage) (interface{}, error) {
 }
 
 func main() {
-	jsonrpc.New()
-	jsonrpc.RegisterProcedure("test.test", testProcedure)
+	rpc = jsonrpc.New()
+	rpc.RegisterProcedure("test.test", testProcedure)
 	e := echo.New()
 	e.POST("/rpc", HandleRPCRequest)
 	e.Logger.Fatal(e.Start(":3000"))

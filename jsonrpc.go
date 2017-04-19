@@ -10,6 +10,11 @@ const (
 	Version = "2.0"
 )
 
+type endpoint struct {
+	Services Services
+
+}
+
 type Request struct {
 	Version string          `json:"jsonrpc"`
 	Method  string          `json:"method"`
@@ -17,29 +22,28 @@ type Request struct {
 	Id      int             `json:"id"`
 }
 
-type SuccessResponse struct {
+type successResponse struct {
 	Version string      `json:"jsonrpc"`
 	Result  interface{} `json:"result"`
 	Id      int         `json:"id"`
 }
 
-
-
 type Procedure func(json.RawMessage) (result interface{}, err error)
 
 type Services map[string]Procedure
 
-var services Services
 
-func New() {
-	services = Services{}
+func New() *endpoint {
+	return &endpoint{
+		Services: map[string]Procedure{},
+	}
 }
 
-func RegisterProcedure(title string, procedure Procedure) {
-	services[title] = procedure
+func (e *endpoint) RegisterProcedure(title string, procedure Procedure) {
+	e.Services[title] = procedure
 }
 
-func (r Request) IsValid() bool {
+func (r Request) isValid() bool {
 	if r.Version != Version {
 		return false
 	}
@@ -51,54 +55,51 @@ func (r Request) IsValid() bool {
 	return true
 }
 
-func HandleRequest(request *Request) (*SuccessResponse, *ErrorResponse) {
-	// Валидируем запрос
-	if !request.IsValid() {
-		return nil, NewError(nil, InvalidRequestErrorCode)
+func (e *endpoint) HandleRequest(request *Request) (*successResponse, *errorResponse) {
+	if !request.isValid() {
+		return nil, e.NewError(nil, InvalidRequestErrorCode)
 	}
 
-	// Ищем процедуру
-	procedure, ok := services[request.Method]
+	procedure, ok := e.Services[request.Method]
 	if !ok {
-		return nil, NewError(nil, MethodNotFoundErrorCode)
+		return nil, e.NewError(nil, MethodNotFoundErrorCode)
 	}
 
-	// Запускаем процедуру с параметрами
 	result, err := procedure(request.Params)
 	if err != nil {
-		return nil, NewError(err, InternalErrorCode)
+		return nil, e.NewError(err, InternalErrorCode)
 	}
 
-	return &SuccessResponse{
+	return &successResponse{
 		Version: Version,
 		Result:  result,
 		Id:      request.Id,
 	}, nil
 }
 
-func HandleRPCRequest(w http.ResponseWriter, r *http.Request) {
+func (e *endpoint) HandleRPCRequest(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		renderResponse(NewError(err, InvalidRequestErrorCode), w)
+		e.renderResponse(e.NewError(err, InvalidRequestErrorCode), w)
 		return
 	}
 	var req Request
 	err = json.Unmarshal(body, &req)
 	if err != nil {
-		renderResponse(NewError(err, ParseErrorCode), w)
+		e.renderResponse(e.NewError(err, ParseErrorCode), w)
 		return
 	}
 
-	response, errorResponse := HandleRequest(&req)
+	response, errorResponse := e.HandleRequest(&req)
 	if errorResponse != nil {
-		renderResponse(errorResponse, w)
+		e.renderResponse(errorResponse, w)
 		return
 	}
-	renderResponse(response, w)
+	e.renderResponse(response, w)
 	return
 }
 
-func renderResponse(res interface{}, w http.ResponseWriter) {
+func (e *endpoint) renderResponse(res interface{}, w http.ResponseWriter) {
 	response, err := json.Marshal(res)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

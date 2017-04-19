@@ -16,7 +16,7 @@ var ErrorMessages = map[int]string{
 	InternalErrorCode:       "Internal error",
 }
 
-type ErrorResponse struct {
+type errorResponse struct {
 	Version string `json:"jsonrpc"`
 	Error   Error  `json:"error"`
 	Id      int    `json:"id"`
@@ -28,9 +28,9 @@ type Error struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
-func NewError(err error, errorCode int) *ErrorResponse {
+func (e *endpoint) NewError(err error, errorCode int) *errorResponse {
 	if err != nil {
-		return &ErrorResponse{
+		return &errorResponse{
 			Version: Version,
 			Error: Error{
 				Code:    errorCode,
@@ -40,7 +40,7 @@ func NewError(err error, errorCode int) *ErrorResponse {
 			Id: 1,
 		}
 	} else {
-		return &ErrorResponse{
+		return &errorResponse{
 			Version: Version,
 			Error: Error{
 				Code:    errorCode,
