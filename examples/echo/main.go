@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 )
 
-var rpc *jsonrpc.Endpoint
+var rpc *json.Endpoint
 
 type testParams struct {
 	Hello string `json:"hello"`

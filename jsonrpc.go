@@ -10,7 +10,7 @@ const (
 	Version = "2.0"
 )
 
-type endpoint struct {
+type Endpoint struct {
 	Services Services
 
 }
@@ -33,13 +33,13 @@ type Procedure func(json.RawMessage) (result interface{}, err error)
 type Services map[string]Procedure
 
 
-func New() *endpoint {
-	return &endpoint{
+func New() *Endpoint {
+	return &Endpoint{
 		Services: map[string]Procedure{},
 	}
 }
 
-func (e *endpoint) RegisterProcedure(title string, procedure Procedure) {
+func (e *Endpoint) RegisterProcedure(title string, procedure Procedure) {
 	e.Services[title] = procedure
 }
 
@@ -55,7 +55,7 @@ func (r Request) isValid() bool {
 	return true
 }
 
-func (e *endpoint) HandleRequest(request *Request) (*successResponse, *errorResponse) {
+func (e *Endpoint) HandleRequest(request *Request) (*successResponse, *errorResponse) {
 	if !request.isValid() {
 		return nil, e.NewError(nil, InvalidRequestErrorCode)
 	}
@@ -77,7 +77,7 @@ func (e *endpoint) HandleRequest(request *Request) (*successResponse, *errorResp
 	}, nil
 }
 
-func (e *endpoint) HandleRPCRequest(w http.ResponseWriter, r *http.Request) {
+func (e *Endpoint) HandleRPCRequest(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		e.renderResponse(e.NewError(err, InvalidRequestErrorCode), w)
@@ -99,7 +99,7 @@ func (e *endpoint) HandleRPCRequest(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (e *endpoint) renderResponse(res interface{}, w http.ResponseWriter) {
+func (e *Endpoint) renderResponse(res interface{}, w http.ResponseWriter) {
 	response, err := json.Marshal(res)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

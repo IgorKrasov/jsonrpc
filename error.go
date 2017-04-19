@@ -28,7 +28,7 @@ type Error struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
-func (e *endpoint) NewError(err error, errorCode int) *errorResponse {
+func (e *Endpoint) NewError(err error, errorCode int) *errorResponse {
 	if err != nil {
 		return &errorResponse{
 			Version: Version,
